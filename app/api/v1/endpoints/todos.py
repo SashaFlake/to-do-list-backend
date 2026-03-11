@@ -20,7 +20,13 @@ from app.api.v1.schemas.todo import (
 router = APIRouter()
 
 
-@router.post("/", response_model=TodoResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/",
+    response_model=TodoResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Создать задачу",
+    description="Создаёт новую задачу для текущего пользователя. `completed` автоматически `false`.",
+)
 async def create_todo(
     body: TodoCreateRequest,
     db: AsyncSession = Depends(get_db),
@@ -38,10 +44,15 @@ async def create_todo(
     return TodoResponse.model_validate(dto.__dict__)
 
 
-@router.get("/", response_model=List[TodoResponse])
+@router.get(
+    "/",
+    response_model=List[TodoResponse],
+    summary="Список задач",
+    description="Возвращает все задачи текущего пользователя с поддержкой пагинации через `skip` / `limit`.",
+)
 async def list_todos(
-    skip: int = Query(0, ge=0),
-    limit: int = Query(100, ge=1, le=1000),
+    skip: int = Query(0, ge=0, description="Пропустить N задач с начала"),
+    limit: int = Query(100, ge=1, le=1000, description="Максимальное количество задач в ответе"),
     db: AsyncSession = Depends(get_db),
 ):
     user_id = 1  # TODO: Keycloak
@@ -52,7 +63,13 @@ async def list_todos(
     return [TodoResponse.model_validate(d.__dict__) for d in dtos]
 
 
-@router.get("/{todo_id}", response_model=TodoResponse)
+@router.get(
+    "/{todo_id}",
+    response_model=TodoResponse,
+    summary="Получить задачу",
+    description="Возвращает задачу по `todo_id`. Доступна только владельцу.",
+    responses={404: {"description": "Задача не найдена"}},
+)
 async def get_todo(
     todo_id: int,
     db: AsyncSession = Depends(get_db),
@@ -67,7 +84,16 @@ async def get_todo(
     return TodoResponse.model_validate(dto.__dict__)
 
 
-@router.put("/{todo_id}", response_model=TodoResponse)
+@router.put(
+    "/{todo_id}",
+    response_model=TodoResponse,
+    summary="Обновить задачу",
+    description=(
+        "Частичное обновление задачи. Передавайте только те поля, которые нужно изменить.\n\n"
+        "Для пометки задачи выполненной: `{\"completed\": true}`"
+    ),
+    responses={404: {"description": "Задача не найдена"}},
+)
 async def update_todo(
     todo_id: int,
     body: TodoUpdateRequest,
@@ -89,7 +115,13 @@ async def update_todo(
     return TodoResponse.model_validate(dto.__dict__)
 
 
-@router.delete("/{todo_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{todo_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Удалить задачу",
+    description="Удаляет задачу по `todo_id`. Доступно только владельцу. Возвращает `204 No Content`.",
+    responses={404: {"description": "Задача не найдена"}},
+)
 async def delete_todo(
     todo_id: int,
     db: AsyncSession = Depends(get_db),
