@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "Todo Core Service"
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
+    DEBUG: bool = False  # В prod=False swagger недоступен
 
     # Database
     POSTGRES_HOST: str
