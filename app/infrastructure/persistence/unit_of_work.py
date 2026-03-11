@@ -1,11 +1,13 @@
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.application.ports.unit_of_work import IUnitOfWork
 from app.infrastructure.persistence.repositories.todo_repository import SqlAlchemyTodoRepository
 
 
-class UnitOfWork:
+class UnitOfWork(IUnitOfWork):
     """
-    Unit of Work pattern — controls transaction boundary.
-    Use cases commit via UoW, not via repository directly.
+    SQLAlchemy implementation of IUnitOfWork.
+    Controls transaction boundary: commit on success, rollback on error.
     """
 
     def __init__(self, db: AsyncSession):
