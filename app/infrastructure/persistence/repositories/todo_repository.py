@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from typing import List, Optional
 
 from app.domain.todo.entity import Todo
@@ -57,13 +57,13 @@ class SqlAlchemyTodoRepository(ITodoRepository):
         return self._to_entity(orm)
 
     async def delete(self, todo_id: int) -> bool:
-        result = await self._db.execute(select(TodoORM).where(TodoORM.id == todo_id))
-        orm = result.scalar_one_or_none()
-        if not orm:
-            return False
-        await self._db.delete(orm)
-        await self._db.flush()
-        return True
+        stmt = (
+            delete(TodoORM)
+            .where(TodoORM.id == todo_id)
+            .returning(TodoORM.id)
+        )
+        result = await self._db.execute(stmt)
+        return result.scalar_one_or_none() is not None
 
     @staticmethod
     def _to_entity(orm: TodoORM) -> Todo:
