@@ -1,6 +1,6 @@
 """Unit tests for TodoUseCases — application layer with mock repository."""
 import pytest
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 from datetime import datetime, timezone
 
 from app.domain.todo.entity import Todo
@@ -47,8 +47,7 @@ async def test_should_return_dto_when_todo_created():
     repo = make_repo(save=AsyncMock(return_value=saved))
     uc = TodoUseCases(repo)
 
-    cmd = CreateTodoCommand(title="Buy milk", user_id=42, priority=3)
-    dto = await uc.create(cmd)
+    dto = await uc.create(CreateTodoCommand(title="Buy milk", user_id=42, priority=3))
 
     assert dto.id == 1
     assert dto.title == "Buy milk"
@@ -65,7 +64,7 @@ async def test_should_call_repo_save_when_todo_created():
 
     repo.save.assert_called_once()
     saved_entity = repo.save.call_args[0][0]
-    assert saved_entity.id is None  # new entity before persistence
+    assert saved_entity.id is None
     assert saved_entity.completed is False
 
 
