@@ -1,18 +1,19 @@
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Optional
+
+from app.domain.shared.base_entity import BaseEntity
 from app.domain.todo.value_objects import Priority
 
 
 @dataclass
-class Todo:
+class Todo(BaseEntity):
     """Todo aggregate root."""
-    id: Optional[int]
-    title: str
-    description: Optional[str]
-    completed: bool
-    priority: Priority
-    user_id: int
+    title: str = ""
+    description: Optional[str] = None
+    completed: bool = False
+    priority: Priority = Priority.LOW
+    user_id: int = 0
     created_at: Optional[datetime] = field(default=None)
 
     def complete(self) -> None:
