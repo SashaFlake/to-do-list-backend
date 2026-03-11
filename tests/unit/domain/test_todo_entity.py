@@ -100,13 +100,11 @@ def test_should_raise_when_priority_out_of_range():
         Priority.from_int(6)
 
 
-# --- equality ---
+# --- id comparison ---
 
 def test_should_be_equal_when_same_id():
     a = make_todo(id=1)
     b = make_todo(id=1, title="Different title")
-    # Todo is a dataclass — equality based on all fields by default
-    # this test documents current behaviour
     assert a.id == b.id
 
 
