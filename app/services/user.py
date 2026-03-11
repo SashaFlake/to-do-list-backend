@@ -26,28 +26,24 @@ class UserService:
         return UserResponse.model_validate(db_user)
 
     async def get_user(self, user_id: int) -> Optional[UserResponse]:
-        # Try cache first
         cache_key = f"user:{user_id}"
         cached = await self.cache.get(cache_key)
         if cached:
             return UserResponse(**cached)
-
-        # Get from DB
         db_user = await self.repository.get_by_id(user_id)
         if db_user:
             user_response = UserResponse.model_validate(db_user)
-            # Cache result
             await self.cache.set(cache_key, user_response.model_dump(mode='json'))
             return user_response
         return None
 
     async def update_user(self, user_id: int, user_update: UserUpdate) -> Optional[UserResponse]:
-        if user_update.password:
-            user_update.password = self._hash_password(user_update.password)
-
-        db_user = await self.repository.update(user_id, user_update)
+        # Fix: work with dict to avoid mutating the Pydantic schema object
+        update_data = user_update.model_dump(exclude_unset=True)
+        if "password" in update_data:
+            update_data["hashed_password"] = self._hash_password(update_data.pop("password"))
+        db_user = await self.repository.update_by_data(user_id, update_data)
         if db_user:
-            # Invalidate cache
             await self.cache.delete(f"user:{user_id}")
             return UserResponse.model_validate(db_user)
         return None
