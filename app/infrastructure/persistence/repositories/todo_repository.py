@@ -1,11 +1,11 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from typing import List, Optional
-from datetime import datetime, timezone
 
 from app.domain.todo.entity import Todo
 from app.domain.todo.value_objects import Priority
 from app.domain.todo.repository import ITodoRepository
+from app.domain.todo.exceptions import TodoNotFoundError
 from app.infrastructure.persistence.models.todo import TodoORM
 
 
@@ -46,7 +46,7 @@ class SqlAlchemyTodoRepository(ITodoRepository):
             result = await self._db.execute(select(TodoORM).where(TodoORM.id == todo.id))
             orm = result.scalar_one_or_none()
             if not orm:
-                raise ValueError(f"Todo {todo.id} not found")
+                raise TodoNotFoundError(todo.id)
             orm.title = todo.title
             orm.description = todo.description
             orm.completed = todo.completed
@@ -62,6 +62,7 @@ class SqlAlchemyTodoRepository(ITodoRepository):
         if not orm:
             return False
         await self._db.delete(orm)
+        await self._db.flush()
         return True
 
     @staticmethod
