@@ -32,13 +32,14 @@ class TodoUseCases:
             user_id=cmd.user_id,
         )
         saved = await self._repo.save(todo)
-        event = TodoCreated(
-            todo_id=saved.id,
-            user_id=saved.user_id,
-            title=saved.title,
-            occurred_at=datetime.now(timezone.utc),
+        saved.push_event(
+            TodoCreated(
+                todo_id=saved.id,
+                user_id=saved.user_id,
+                title=saved.title,
+                occurred_at=datetime.now(timezone.utc),
+            )
         )
-        # TODO: publish event to message bus
         return self._to_dto(saved)
 
     async def update(self, cmd: UpdateTodoCommand) -> Optional[TodoDTO]:
@@ -52,12 +53,13 @@ class TodoUseCases:
             todo.update_description(cmd.description)
         if cmd.completed is True:
             todo.complete()
-            event = TodoCompleted(
-                todo_id=todo.id,
-                user_id=todo.user_id,
-                occurred_at=datetime.now(timezone.utc),
+            todo.push_event(
+                TodoCompleted(
+                    todo_id=todo.id,
+                    user_id=todo.user_id,
+                    occurred_at=datetime.now(timezone.utc),
+                )
             )
-            # TODO: publish event
         elif cmd.completed is False:
             todo.uncomplete()
         if cmd.priority is not None:
@@ -72,12 +74,13 @@ class TodoUseCases:
             return False
         result = await self._repo.delete(cmd.todo_id)
         if result:
-            event = TodoDeleted(
-                todo_id=cmd.todo_id,
-                user_id=cmd.user_id,
-                occurred_at=datetime.now(timezone.utc),
+            todo.push_event(
+                TodoDeleted(
+                    todo_id=cmd.todo_id,
+                    user_id=cmd.user_id,
+                    occurred_at=datetime.now(timezone.utc),
+                )
             )
-            # TODO: publish event
         return result
 
     # --- Queries ---
