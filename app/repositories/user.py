@@ -3,7 +3,7 @@ from sqlalchemy import select
 from typing import Optional, List
 
 from app.models.user import User
-from app.schemas.user import UserCreate, UserUpdate
+from app.schemas.user import UserCreate
 
 
 class UserRepository:
@@ -26,22 +26,20 @@ class UserRepository:
         db_user = User(
             email=user.email,
             username=user.username,
-            hashed_password=hashed_password
+            hashed_password=hashed_password,
         )
         self.db.add(db_user)
         await self.db.flush()
         await self.db.refresh(db_user)
         return db_user
 
-    async def update(self, user_id: int, user_update: UserUpdate) -> Optional[User]:
+    async def update_by_data(self, user_id: int, update_data: dict) -> Optional[User]:
+        """Update user by pre-processed dict to allow password hashing outside schema."""
         db_user = await self.get_by_id(user_id)
         if not db_user:
             return None
-
-        update_data = user_update.model_dump(exclude_unset=True)
         for field, value in update_data.items():
             setattr(db_user, field, value)
-
         await self.db.flush()
         await self.db.refresh(db_user)
         return db_user
@@ -50,6 +48,5 @@ class UserRepository:
         db_user = await self.get_by_id(user_id)
         if not db_user:
             return False
-
         await self.db.delete(db_user)
         return True
