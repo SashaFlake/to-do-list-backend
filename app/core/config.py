@@ -1,6 +1,12 @@
 from pydantic_settings import BaseSettings
 from typing import List
 from functools import lru_cache
+from enum import Enum
+
+
+class CacheType(str, Enum):
+    MEMORY = "memory"
+    REDIS = "redis"
 
 
 class Settings(BaseSettings):
@@ -18,7 +24,7 @@ class Settings(BaseSettings):
     POSTGRES_DB: str
 
     # Redis
-    REDIS_HOST: str
+    REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
     REDIS_PASSWORD: str = ""
     REDIS_DB: int = 0
@@ -36,8 +42,9 @@ class Settings(BaseSettings):
     DB_MAX_OVERFLOW: int = 10
     DB_POOL_TIMEOUT: int = 30
 
-    # Redis cache TTL
+    # Cache
     CACHE_TTL: int = 300
+    CACHE_TYPE: CacheType = CacheType.REDIS
 
     @property
     def database_url(self) -> str:
