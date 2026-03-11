@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import Optional, List
+from typing import List, Optional
 
 from app.repositories.todo import TodoRepository
 from app.schemas.todo import TodoCreate, TodoUpdate, TodoResponse
@@ -11,53 +11,53 @@ class TodoService:
         self.repository = TodoRepository(db)
         self.cache = CacheService()
 
-    def _cache_key(self, todo_id: int, user_id: int) -> str:
-        return f"todo:{user_id}:{todo_id}"
+    async def create_todo(self, todo: TodoCreate, user_id: int) -> TodoResponse:
+        db_todo = await self.repository.create(todo, user_id)
+        await self.repository.db.commit()
+        await self.cache.delete(f"user_todos:{user_id}")
+        return TodoResponse.model_validate(db_todo)
 
-    def _list_cache_key(self, user_id: int) -> str:
-        return f"todos:{user_id}"
-
-    async def create_todo(self, todo_in: TodoCreate, user_id: int) -> TodoResponse:
-        todo = await self.repository.create(todo_in, user_id)
-        await self.cache.delete(self._list_cache_key(user_id))
-        return TodoResponse.model_validate(todo)
-
-    async def get_todo(self, todo_id: int, user_id: int) -> Optional[TodoResponse]:
-        cache_key = self._cache_key(todo_id, user_id)
+    async def get_todo(self, todo_id: int) -> Optional[TodoResponse]:
+        cache_key = f"todo:{todo_id}"
         cached = await self.cache.get(cache_key)
         if cached:
             return TodoResponse(**cached)
-        todo = await self.repository.get_by_id(todo_id, user_id)
-        if todo:
-            response = TodoResponse.model_validate(todo)
-            await self.cache.set(cache_key, response.model_dump(mode='json'))
+
+        db_todo = await self.repository.get_by_id(todo_id)
+        if db_todo:
+            response = TodoResponse.model_validate(db_todo)
+            await self.cache.set(cache_key, response.model_dump(mode="json"))
             return response
         return None
 
-    async def get_todos(
-        self,
-        user_id: int,
-        skip: int = 0,
-        limit: int = 50,
-        completed: Optional[bool] = None,
-    ) -> List[TodoResponse]:
-        todos = await self.repository.get_all_by_user(user_id, skip, limit, completed)
-        return [TodoResponse.model_validate(t) for t in todos]
+    async def get_todos(self, user_id: int, skip: int = 0, limit: int = 100) -> List[TodoResponse]:
+        cache_key = f"user_todos:{user_id}:{skip}:{limit}"
+        cached = await self.cache.get(cache_key)
+        if cached:
+            return [TodoResponse(**item) for item in cached]
 
-    async def update_todo(
-        self, todo_id: int, user_id: int, todo_update: TodoUpdate
-    ) -> Optional[TodoResponse]:
-        todo = await self.repository.update(todo_id, user_id, todo_update)
-        if todo:
-            response = TodoResponse.model_validate(todo)
-            await self.cache.delete(self._cache_key(todo_id, user_id))
-            await self.cache.delete(self._list_cache_key(user_id))
-            return response
+        todos = await self.repository.get_by_user(user_id, skip, limit)
+        responses = [TodoResponse.model_validate(t) for t in todos]
+        await self.cache.set(cache_key, [r.model_dump(mode="json") for r in responses])
+        return responses
+
+    async def update_todo(self, todo_id: int, todo_update: TodoUpdate) -> Optional[TodoResponse]:
+        db_todo = await self.repository.update(todo_id, todo_update)
+        if db_todo:
+            await self.repository.db.commit()
+            await self.cache.delete(f"todo:{todo_id}")
+            await self.cache.delete(f"user_todos:{db_todo.user_id}")
+            return TodoResponse.model_validate(db_todo)
         return None
 
-    async def delete_todo(self, todo_id: int, user_id: int) -> bool:
-        result = await self.repository.delete(todo_id, user_id)
+    async def delete_todo(self, todo_id: int) -> bool:
+        db_todo = await self.repository.get_by_id(todo_id)
+        if not db_todo:
+            return False
+        user_id = db_todo.user_id
+        result = await self.repository.delete(todo_id)
         if result:
-            await self.cache.delete(self._cache_key(todo_id, user_id))
-            await self.cache.delete(self._list_cache_key(user_id))
+            await self.repository.db.commit()
+            await self.cache.delete(f"todo:{todo_id}")
+            await self.cache.delete(f"user_todos:{user_id}")
         return result

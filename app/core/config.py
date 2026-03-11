@@ -5,7 +5,7 @@ from functools import lru_cache
 
 class Settings(BaseSettings):
     # Application
-    PROJECT_NAME: str = "FastAPI Application"
+    PROJECT_NAME: str = "Todo Core Service"
     VERSION: str = "1.0.0"
     API_V1_STR: str = "/api/v1"
 
@@ -27,8 +27,8 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
-    # CORS
-    ALLOWED_ORIGINS: List[str] = ["*"]
+    # CORS — explicitly list origins, never use ["*"] in production
+    ALLOWED_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:8080"]
 
     # Database pool settings
     DB_POOL_SIZE: int = 20
