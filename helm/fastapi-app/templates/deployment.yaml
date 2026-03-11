@@ -1,0 +1,155 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "fastapi-app.fullname" . }}
+  labels:
+    {{- include "fastapi-app.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "fastapi-app.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "fastapi-app.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "fastapi-app.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+      - name: {{ .Chart.Name }}
+        securityContext:
+          {{- toYaml .Values.securityContext | nindent 12 }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: {{ .Values.service.targetPort }}
+          protocol: TCP
+        env:
+        - name: PROJECT_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "fastapi-app.fullname" . }}
+              key: project-name
+        - name: VERSION
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "fastapi-app.fullname" . }}
+              key: version
+        - name: API_V1_STR
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "fastapi-app.fullname" . }}
+              key: api-v1-str
+        - name: POSTGRES_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "fastapi-app.fullname" . }}
+              key: postgres-host
+        - name: POSTGRES_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "fastapi-app.fullname" . }}
+              key: postgres-port
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "fastapi-app.fullname" . }}
+              key: postgres-user
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "fastapi-app.fullname" . }}
+              key: postgres-password
+        - name: POSTGRES_DB
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "fastapi-app.fullname" . }}
+              key: postgres-db
+        - name: REDIS_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "fastapi-app.fullname" . }}
+              key: redis-host
+        - name: REDIS_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "fastapi-app.fullname" . }}
+              key: redis-port
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "fastapi-app.fullname" . }}
+              key: redis-password
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "fastapi-app.fullname" . }}
+              key: secret-key
+        - name: ALGORITHM
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "fastapi-app.fullname" . }}
+              key: algorithm
+        - name: ACCESS_TOKEN_EXPIRE_MINUTES
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "fastapi-app.fullname" . }}
+              key: access-token-expire-minutes
+        - name: ALLOWED_ORIGINS
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "fastapi-app.fullname" . }}
+              key: allowed-origins
+        - name: DB_POOL_SIZE
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "fastapi-app.fullname" . }}
+              key: db-pool-size
+        - name: DB_MAX_OVERFLOW
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "fastapi-app.fullname" . }}
+              key: db-max-overflow
+        - name: DB_POOL_TIMEOUT
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "fastapi-app.fullname" . }}
+              key: db-pool-timeout
+        - name: CACHE_TTL
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "fastapi-app.fullname" . }}
+              key: cache-ttl
+        livenessProbe:
+          {{- toYaml .Values.livenessProbe | nindent 12 }}
+        readinessProbe:
+          {{- toYaml .Values.readinessProbe | nindent 12 }}
+        resources:
+          {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
