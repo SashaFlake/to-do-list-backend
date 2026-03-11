@@ -14,6 +14,7 @@ class SqlAlchemyTodoRepository(ITodoRepository):
 
     def __init__(self, db: AsyncSession):
         self._db = db
+        self._tracked: List[Todo] = []  # for domain event dispatch via UoW
 
     async def get_by_id(self, todo_id: int) -> Optional[Todo]:
         result = await self._db.execute(select(TodoORM).where(TodoORM.id == todo_id))
@@ -54,7 +55,9 @@ class SqlAlchemyTodoRepository(ITodoRepository):
 
         await self._db.flush()
         await self._db.refresh(orm)
-        return self._to_entity(orm)
+        entity = self._to_entity(orm)
+        self._tracked.append(todo)  # track for event dispatch
+        return entity
 
     async def delete(self, todo_id: int) -> bool:
         stmt = (
