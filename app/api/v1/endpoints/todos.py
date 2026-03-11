@@ -20,15 +20,9 @@ from app.api.v1.schemas.todo import (
 router = APIRouter()
 
 
-def get_use_cases(db: AsyncSession = Depends(get_db)) -> TodoUseCases:
-    uow = UnitOfWork(db)
-    return TodoUseCases(repository=uow.todos)
-
-
 @router.post("/", response_model=TodoResponse, status_code=status.HTTP_201_CREATED)
 async def create_todo(
     body: TodoCreateRequest,
-    use_cases: TodoUseCases = Depends(get_use_cases),
     db: AsyncSession = Depends(get_db),
 ):
     # TODO: replace stub with Depends(get_current_user) after Keycloak
@@ -40,8 +34,7 @@ async def create_todo(
         user_id=user_id,
     )
     async with UnitOfWork(db) as uow:
-        uc = TodoUseCases(repository=uow.todos)
-        dto = await uc.create(cmd)
+        dto = await TodoUseCases(uow.todos).create(cmd)
     return TodoResponse.model_validate(dto.__dict__)
 
 
@@ -53,8 +46,9 @@ async def list_todos(
 ):
     user_id = 1  # TODO: Keycloak
     async with UnitOfWork(db) as uow:
-        uc = TodoUseCases(repository=uow.todos)
-        dtos = await uc.list(ListTodosQuery(user_id=user_id, skip=skip, limit=limit))
+        dtos = await TodoUseCases(uow.todos).list(
+            ListTodosQuery(user_id=user_id, skip=skip, limit=limit)
+        )
     return [TodoResponse.model_validate(d.__dict__) for d in dtos]
 
 
@@ -65,8 +59,9 @@ async def get_todo(
 ):
     user_id = 1  # TODO: Keycloak
     async with UnitOfWork(db) as uow:
-        uc = TodoUseCases(repository=uow.todos)
-        dto = await uc.get(GetTodoQuery(todo_id=todo_id, user_id=user_id))
+        dto = await TodoUseCases(uow.todos).get(
+            GetTodoQuery(todo_id=todo_id, user_id=user_id)
+        )
     if not dto:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Todo not found")
     return TodoResponse.model_validate(dto.__dict__)
@@ -88,8 +83,7 @@ async def update_todo(
         priority=body.priority,
     )
     async with UnitOfWork(db) as uow:
-        uc = TodoUseCases(repository=uow.todos)
-        dto = await uc.update(cmd)
+        dto = await TodoUseCases(uow.todos).update(cmd)
     if not dto:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Todo not found")
     return TodoResponse.model_validate(dto.__dict__)
@@ -103,6 +97,5 @@ async def delete_todo(
     user_id = 1  # TODO: Keycloak
     cmd = DeleteTodoCommand(todo_id=todo_id, user_id=user_id)
     async with UnitOfWork(db) as uow:
-        uc = TodoUseCases(repository=uow.todos)
-        if not await uc.delete(cmd):
+        if not await TodoUseCases(uow.todos).delete(cmd):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Todo not found")
