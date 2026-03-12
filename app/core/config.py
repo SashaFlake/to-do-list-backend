@@ -39,6 +39,11 @@ class Settings(BaseSettings):
     # Redis cache TTL
     CACHE_TTL: int = 300
 
+    # Keycloak
+    KEYCLOAK_URL: str  # http://keycloak:8080
+    KEYCLOAK_REALM: str  # my-realm
+    KEYCLOAK_CLIENT_ID: str  # todo-backend
+
     @property
     def database_url(self) -> str:
         return (
