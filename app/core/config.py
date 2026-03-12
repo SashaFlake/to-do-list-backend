@@ -40,9 +40,7 @@ class Settings(BaseSettings):
     CACHE_TTL: int = 300
 
     # Keycloak
-    KEYCLOAK_URL: str  # http://keycloak:8080
-    KEYCLOAK_REALM: str  # my-realm
-    KEYCLOAK_CLIENT_ID: str  # todo-backend
+    KEYCLOAK_PUBLIC_KEY: str  # http://keycloak:8080
 
     @property
     def database_url(self) -> str:

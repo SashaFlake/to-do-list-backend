@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 
+from app.api.v1.dependencies import get_current_user
 from app.db.session import get_db
 from app.infrastructure.persistence.unit_of_work import UnitOfWork
 from app.application.todo.use_cases import TodoUseCases
@@ -16,6 +17,7 @@ from app.api.v1.schemas.todo import (
     TodoUpdateRequest,
     TodoResponse,
 )
+from todo_auth import TokenPayload
 
 router = APIRouter()
 
@@ -30,9 +32,9 @@ router = APIRouter()
 async def create_todo(
     body: TodoCreateRequest,
     db: AsyncSession = Depends(get_db),
+    current_user: TokenPayload = Depends(get_current_user),
 ):
-    # TODO: replace stub with Depends(get_current_user) after Keycloak
-    user_id = 1
+    user_id = current_user.sub
     cmd = CreateTodoCommand(
         title=body.title,
         description=body.description,
@@ -54,8 +56,9 @@ async def list_todos(
     skip: int = Query(0, ge=0, description="Пропустить N задач с начала"),
     limit: int = Query(100, ge=1, le=1000, description="Максимальное количество задач в ответе"),
     db: AsyncSession = Depends(get_db),
+    current_user: TokenPayload = Depends(get_current_user),
 ):
-    user_id = 1  # TODO: Keycloak
+    user_id = current_user.sub
     async with UnitOfWork(db) as uow:
         dtos = await TodoUseCases(uow.todos).list(
             ListTodosQuery(user_id=user_id, skip=skip, limit=limit)
@@ -73,8 +76,9 @@ async def list_todos(
 async def get_todo(
     todo_id: int,
     db: AsyncSession = Depends(get_db),
+    current_user: TokenPayload = Depends(get_current_user),
 ):
-    user_id = 1  # TODO: Keycloak
+    user_id = current_user.sub
     async with UnitOfWork(db) as uow:
         dto = await TodoUseCases(uow.todos).get(
             GetTodoQuery(todo_id=todo_id, user_id=user_id)
@@ -98,8 +102,9 @@ async def update_todo(
     todo_id: int,
     body: TodoUpdateRequest,
     db: AsyncSession = Depends(get_db),
+    current_user: TokenPayload = Depends(get_current_user),
 ):
-    user_id = 1  # TODO: Keycloak
+    user_id = current_user.sub
     cmd = UpdateTodoCommand(
         todo_id=todo_id,
         user_id=user_id,
@@ -125,8 +130,9 @@ async def update_todo(
 async def delete_todo(
     todo_id: int,
     db: AsyncSession = Depends(get_db),
+    current_user: TokenPayload = Depends(get_current_user),
 ):
-    user_id = 1  # TODO: Keycloak
+    user_id = current_user.sub
     cmd = DeleteTodoCommand(todo_id=todo_id, user_id=user_id)
     async with UnitOfWork(db) as uow:
         if not await TodoUseCases(uow.todos).delete(cmd):
