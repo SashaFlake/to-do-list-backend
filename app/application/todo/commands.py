@@ -5,7 +5,7 @@ from typing import Optional
 @dataclass(frozen=True)
 class CreateTodoCommand:
     title: str
-    user_id: int
+    user_id: str
     description: Optional[str] = None
     priority: int = 1
 
@@ -13,7 +13,7 @@ class CreateTodoCommand:
 @dataclass(frozen=True)
 class UpdateTodoCommand:
     todo_id: int
-    user_id: int
+    user_id: str
     title: Optional[str] = None
     description: Optional[str] = None
     completed: Optional[bool] = None
@@ -23,4 +23,4 @@ class UpdateTodoCommand:
 @dataclass(frozen=True)
 class DeleteTodoCommand:
     todo_id: int
-    user_id: int
+    user_id: str

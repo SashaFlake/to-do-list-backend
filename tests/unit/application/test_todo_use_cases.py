@@ -21,7 +21,7 @@ def make_todo(**kwargs) -> Todo:
         description=None,
         completed=False,
         priority=Priority.NORMAL,
-        user_id=42,
+        user_id="123",
         created_at=datetime(2026, 1, 1, tzinfo=timezone.utc),
     )
     return Todo(**{**defaults, **kwargs})
@@ -47,12 +47,12 @@ async def test_should_return_dto_when_todo_created():
     repo = make_repo(save=AsyncMock(return_value=saved))
     uc = TodoUseCases(repo)
 
-    dto = await uc.create(CreateTodoCommand(title="Buy milk", user_id=42, priority=3))
+    dto = await uc.create(CreateTodoCommand(title="Buy milk", user_id="123", priority=3))
 
     assert dto.id == 1
     assert dto.title == "Buy milk"
     assert dto.completed is False
-    assert dto.user_id == 42
+    assert dto.user_id == "123"
 
 
 @pytest.mark.asyncio
@@ -60,7 +60,7 @@ async def test_should_call_repo_save_when_todo_created():
     repo = make_repo(save=AsyncMock(return_value=make_todo()))
     uc = TodoUseCases(repo)
 
-    await uc.create(CreateTodoCommand(title="Test", user_id=1, priority=1))
+    await uc.create(CreateTodoCommand(title="Test", user_id="1", priority=1))
 
     repo.save.assert_called_once()
     saved_entity = repo.save.call_args[0][0]
@@ -74,7 +74,7 @@ async def test_should_set_priority_when_create_command_has_priority():
     repo = make_repo(save=AsyncMock(return_value=saved))
     uc = TodoUseCases(repo)
 
-    dto = await uc.create(CreateTodoCommand(title="Urgent", user_id=1, priority=4))
+    dto = await uc.create(CreateTodoCommand(title="Urgent", user_id="1", priority=4))
 
     assert dto.priority == 4
 
@@ -91,7 +91,7 @@ async def test_should_return_updated_dto_when_title_changed():
     )
     uc = TodoUseCases(repo)
 
-    dto = await uc.update(UpdateTodoCommand(todo_id=1, user_id=42, title="New"))
+    dto = await uc.update(UpdateTodoCommand(todo_id=1, user_id="123", title="New"))
 
     assert dto.title == "New"
 
@@ -101,18 +101,18 @@ async def test_should_return_none_when_todo_not_found_on_update():
     repo = make_repo(get_by_id=AsyncMock(return_value=None))
     uc = TodoUseCases(repo)
 
-    dto = await uc.update(UpdateTodoCommand(todo_id=999, user_id=42))
+    dto = await uc.update(UpdateTodoCommand(todo_id=999, user_id="123"))
 
     assert dto is None
 
 
 @pytest.mark.asyncio
 async def test_should_return_none_when_user_does_not_own_todo_on_update():
-    other_users_todo = make_todo(user_id=99)
+    other_users_todo = make_todo(user_id="99")
     repo = make_repo(get_by_id=AsyncMock(return_value=other_users_todo))
     uc = TodoUseCases(repo)
 
-    dto = await uc.update(UpdateTodoCommand(todo_id=1, user_id=42, title="Hack"))
+    dto = await uc.update(UpdateTodoCommand(todo_id=1, user_id="123", title="Hack"))
 
     assert dto is None
     repo.save.assert_not_called()
@@ -127,7 +127,7 @@ async def test_should_mark_completed_when_update_command_sets_completed_true():
     )
     uc = TodoUseCases(repo)
 
-    dto = await uc.update(UpdateTodoCommand(todo_id=1, user_id=42, completed=True))
+    dto = await uc.update(UpdateTodoCommand(todo_id=1, user_id="123", completed=True))
 
     assert dto.completed is True
 
@@ -141,7 +141,7 @@ async def test_should_unmark_completed_when_update_command_sets_completed_false(
     )
     uc = TodoUseCases(repo)
 
-    dto = await uc.update(UpdateTodoCommand(todo_id=1, user_id=42, completed=False))
+    dto = await uc.update(UpdateTodoCommand(todo_id=1, user_id="123", completed=False))
 
     assert dto.completed is False
 
@@ -155,7 +155,7 @@ async def test_should_not_change_title_when_update_command_title_is_none():
     )
     uc = TodoUseCases(repo)
 
-    dto = await uc.update(UpdateTodoCommand(todo_id=1, user_id=42, title=None))
+    dto = await uc.update(UpdateTodoCommand(todo_id=1, user_id="123", title=None))
 
     assert dto.title == "Keep this"
 
@@ -170,7 +170,7 @@ async def test_should_return_true_when_todo_deleted():
     )
     uc = TodoUseCases(repo)
 
-    result = await uc.delete(DeleteTodoCommand(todo_id=1, user_id=42))
+    result = await uc.delete(DeleteTodoCommand(todo_id=1, user_id="123"))
 
     assert result is True
     repo.delete.assert_called_once_with(1)

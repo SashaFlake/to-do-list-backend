@@ -56,7 +56,6 @@ app = FastAPI(
         "## Todo Core Service\n\n"
         "Сервис управления задачами. \n\n"
         "### Авторизация\n"
-        "До интеграции Keycloak используется заглушка `user_id=1`."
     ),
     openapi_tags=TAGS_METADATA,
     openapi_url=_openapi_url,

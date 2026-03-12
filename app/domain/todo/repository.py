@@ -12,7 +12,7 @@ class ITodoRepository(ABC):
 
     @abstractmethod
     async def get_by_user(
-        self, user_id: int, skip: int = 0, limit: int = 100
+        self, user_id: str, skip: int = 0, limit: int = 100
     ) -> List[Todo]:
         ...
 

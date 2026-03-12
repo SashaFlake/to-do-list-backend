@@ -17,5 +17,5 @@ class TodoORM(Base, AsyncAttrs):
     created_at: Mapped[Optional[DateTime]] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), nullable=False)
     owner: Mapped["UserORM"] = relationship(back_populates="todos")

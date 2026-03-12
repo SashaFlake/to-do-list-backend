@@ -5,7 +5,7 @@ from datetime import datetime
 @dataclass(frozen=True)
 class TodoCreated:
     todo_id: int
-    user_id: int
+    user_id: str
     title: str
     occurred_at: datetime
 
@@ -13,12 +13,12 @@ class TodoCreated:
 @dataclass(frozen=True)
 class TodoCompleted:
     todo_id: int
-    user_id: int
+    user_id: str
     occurred_at: datetime
 
 
 @dataclass(frozen=True)
 class TodoDeleted:
     todo_id: int
-    user_id: int
+    user_id: str
     occurred_at: datetime

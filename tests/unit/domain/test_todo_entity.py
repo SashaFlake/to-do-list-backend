@@ -11,7 +11,7 @@ def make_todo(**kwargs) -> Todo:
         description=None,
         completed=False,
         priority=Priority.NORMAL,
-        user_id=42,
+        user_id="123",
     )
     return Todo(**{**defaults, **kwargs})
 
