@@ -15,11 +15,10 @@ asyncpg = "^0.30.0"
 redis = "^5.0.1"
 pydantic = "^2.7.0"
 pydantic-settings = "^2.3.0"
-passlib = {extras = ["bcrypt"], version = "^1.7.4"}
 python-multipart = "^0.0.9"
 authlib = "^1.6.9"
 cryptography = "^42.0.0"
-todo-auth = {git = "https://github.com/SashaFlake/to-do-list-auth-lib.git", tag = "0.1.0"}
+todo-auth = {git = "https://github.com/SashaFlake/to-do-list-auth-lib.git", rev = "1c8a737789491898818465fdab2c51e46291cf9b"}
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.2.0"

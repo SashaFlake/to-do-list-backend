@@ -1,5 +1,5 @@
-from sqlalchemy import String, Integer, Boolean, ForeignKey, DateTime, func, UUID
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import String, Integer, Boolean, DateTime, func
+from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from typing import Optional
 from app.db.session import Base

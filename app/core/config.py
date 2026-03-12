@@ -40,7 +40,16 @@ class Settings(BaseSettings):
     CACHE_TTL: int = 300
 
     # Keycloak
-    KEYCLOAK_PUBLIC_KEY: str
+    KEYCLOAK_URL: str
+    KEYCLOAK_REALM: str
+    KEYCLOAK_CLIENT_ID: str
+
+    @property
+    def keycloak_jwks_url(self) -> str:
+        return (
+            f"{self.KEYCLOAK_URL}/realms/{self.KEYCLOAK_REALM}"
+            "/protocol/openid-connect/certs"
+        )
 
     @property
     def database_url(self) -> str:
