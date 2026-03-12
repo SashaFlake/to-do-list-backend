@@ -40,7 +40,7 @@ class Settings(BaseSettings):
     CACHE_TTL: int = 300
 
     # Keycloak
-    KEYCLOAK_PUBLIC_KEY: str  # http://keycloak:8080
+    KEYCLOAK_PUBLIC_KEY: str
 
     @property
     def database_url(self) -> str:
