@@ -11,5 +11,5 @@ class TodoDTO:
     description: Optional[str]
     completed: bool
     priority: int
-    user_id: int
+    user_id: str
     created_at: Optional[datetime]

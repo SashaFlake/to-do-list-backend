@@ -13,7 +13,7 @@ class Todo(BaseEntity):
     description: Optional[str] = None
     completed: bool = False
     priority: Priority = Priority.LOW
-    user_id: int = 0
+    user_id: str = ""
     created_at: Optional[datetime] = field(default=None)
 
     def complete(self) -> None:
