@@ -5,6 +5,5 @@ class Base(DeclarativeBase):
     pass
 
 
-# Import all models here so Alembic can detect them
-from app.models.user import User  # noqa: F401, E402
-from app.models.todo import Todo  # noqa: F401, E402
+# Import all ORM models here so Alembic can detect them via target_metadata
+from app.infrastructure.persistence.models.todo import TodoORM  # noqa: F401, E402
